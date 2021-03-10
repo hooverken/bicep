@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+
+        "virtualMachineSize": { "value": "Standard_D4as_v4" },
+
+        "vmImagePublisher" : {"value" : "Canonical"},
+        "vmOfferName" : {"value" : "UbuntuServer"},
+        "vmOfferSku" : {"value" : "18.04-LTS"},
+
+        "adminUsername": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/df5f8257-01b5-4a86-b42d-c83a9355c855/resourceGroups/Kentoso-WVD-Demo-RG/providers/Microsoft.KeyVault/vaults/Ken-EastUS2-KV1"
+                },
+                "secretName": "VMAdminUsername"
+            }
+        },
+        "adminSshPublicKey": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/df5f8257-01b5-4a86-b42d-c83a9355c855/resourceGroups/Kentoso-WVD-Demo-RG/providers/Microsoft.KeyVault/vaults/Ken-EastUS2-KV1"
+                },
+                "secretName": "adminSshPublicKey"
+            }
+        },
+
+        "virtualNetworkName": { "value": "Kentoso-VNET" },
+        "subnetName": { "value": "NewMSIXSubnet" },
+        "virtualNetworkResourceGroupName" : { "value": "Kentoso-WVD-Demo-RG" },
+    }                
+}

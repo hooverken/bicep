@@ -5,7 +5,7 @@ This repo is a collection of Bicep experiments that I'm doing as I start to work
 ## Contents
 
 * `joindomain-module.bicep` is an attempt to create a module for the "joindomain" VM extension so it can be called from a VM creation tempalte.  Not working.
-* `storageaccount.bicep` is a basic bicep file to create a storage account, very similar to the one used in the Bicep tutorial.
+* `storageaccount.bicep` is a basic bicep file to create a storage account, very similar to the one used in the [Bicep tutorial](https://github.com/Azure/bicep/blob/main/docs/tutorial/01-simple-template.md).
 * `subscriptionId.bicep` is a very simple bicep file that tests referencing an existing resource by creating the resource reference with the existing tag and outputting the subcription ID for the resource.
 * `UbuntuVM-SSH.bicep` and `UbuntiVM-parameters.json` are a bicep file and its associated parameters file to create an Ubuntu VM with Azure that is configured for SSH-only authentication.  The SSH public key and other secrets are included via key vault references. Working.
 * `Win2019-domainjoined.bicep` and `Win2019-domainjoined-parameters.json` are a work in progress to create a VM that is domain joined by using the joindomain module mentioned above.  Currently not working.

@@ -1,0 +1,1 @@
+// Creates necessary containers for WVD environment - host pool, app group, workspace.

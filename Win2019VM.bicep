@@ -17,15 +17,6 @@ var subnetId = '${subscription().id}/resourceGroups/${virtualNetworkResourceGrou
 
 // Building the VM and its components
 
-// A reference to the target vNet/subnet so we can use it easily later
-// resource vnetInfo 'Microsoft.Network/virtualNetworks@2020-06-01' existing = { 
-//  name : virtualNetworkName 
-// }
-
-// The Availability set for the VM.  Need to figure out how to create it if it doesn't exist.
-// resource availabilitySet 'Microsoft.Compute/availabilitySets@2020-06-01' existing = {
-//   name: availabilitySetName
-// }
 
 // NSG for the NIC
 resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01'= {

@@ -1,45 +1,51 @@
 // Deploys a Windows Server 2019 VM with Hybrid benefit enabled
 
 // Parameters
+// most have default values except for the default admin username and password
+
 param virtualMachineName string
-param virtualMachineSize string
 
-param virtualNetworkName string
-param virtualNetworkResourceGroupName string
-param subnetName string
 
-param vmImagePublisher string
-param vmOfferName string
-param vmOfferSku string
+param virtualMachineSize string = 'Standard_D2as_v4'
+param virtualNetworkName string = 'Kentoso-VNET'
+param virtualNetworkResourceGroupName string = 'Kentoso-WVD-Demo-RG'
 
-param adminUsername string
-param adminPassword string {
-  secure: true
-}
+@allowed([
+  'DesktopHostSubnet'
+  'RemoteAppHostSubnet'
+  'ADDS-Subnet'
+  'LinuxVMSubnet'
+  'NewMSIXSubnet'
+  'NetAppFilesSubnet'
+  'subnetWithNSG'
+  'FileSyncSubnet'
+  'ADFSProxySubnet'
+])
+param subnetName string = 'NewMSIXSubnet'
 
-param domainNetBIOSName string
-param ouPath string = 'CN=Computers,DC=kentoso,DC=us'  // default value, can be overridden
-param domainJoinUsername string
-param domainJoinPassword string {
-  secure: true
-}
+param vmImagePublisher string = 'MicrosoftWindowsServer'
+param vmOfferName string = 'WindowsServer'
+param vmOfferSku string = '2019-Datacenter'
+
+param adminUsername string = 'ken'
+@secure()
+param adminPassword string 
+
+param domainToJoin string = 'kentoso.us'
+param domainJoinUsernameSecretName string = 'kentosoDomainJoinUsername'
+param domainJoinPasswordSecretName string = 'kentosoDomainJoinPassword'
+param keyVaultName string = 'Ken-EastUS2-KV1'
+param keyVaultSubscription string = 'df5f8257-01b5-4a86-b42d-c83a9355c855'
+param keyVaultResourceGroupName string = 'Kentoso-WVD-Demo-RG'
+param ouPath string = 'OU=NewComputers,DC=kentoso,DC=us' // joindomain can't add computers to the default "Computers" container (?!?)
+
 
 // Variables
 var subnetId = '${subscription().id}/resourceGroups/${virtualNetworkResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${virtualNetworkName}/subnets/${subnetName}'
 
+
+
 // Building the VM and its components
-
-// A reference to the target vNet/subnet so we can use it easily later
-// resource vnetInfo 'Microsoft.Network/virtualNetworks@2020-06-01' existing = { 
-//  name : virtualNetworkName 
-// }
-
-// The Availability set for the VM.  Need to figure out how to create it if it doesn't exist.
-// resource availabilitySet 'Microsoft.Compute/availabilitySets@2020-06-01' existing = {
-//   name: availabilitySetName
-// }
-
-
 
 // define the NIC for the VM
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-06-01' = {
@@ -149,13 +155,25 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2020-06-01' = {
   }
 }
 
+
+// key vault reference for secrets
+resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
+  name: keyVaultName
+  scope: resourceGroup(keyVaultSubscription,keyVaultResourceGroupName)
+}
+
+// reference to external module to do domain join (so we can read the KV reference)
 module joinDomain './joindomain-module.bicep' = {
   name: '${virtualMachineName}-domainjoin'
+  dependsOn: [ 
+    virtualMachine
+  ]
   params: {
-    domainNetBIOSName: domainNetBIOSName
+    virtualMachineName : virtualMachineName
+    domainToJoin: domainToJoin
     ouPath: ouPath
-    username: domainJoinUsername
-    password: domainJoinPassword
+    domainJoinUsername: keyVault.getSecret(domainJoinUsernameSecretName)
+    domainJoinPassword: keyVault.getSecret(domainJoinPasswordSecretName)
   }
 }
 

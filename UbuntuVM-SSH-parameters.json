@@ -28,6 +28,6 @@
 
         "virtualNetworkName": { "value": "Kentoso-VNET" },
         "subnetName": { "value": "NewMSIXSubnet" },
-        "virtualNetworkResourceGroupName" : { "value": "Kentoso-WVD-Demo-RG" },
+        "virtualNetworkResourceGroupName" : { "value": "Kentoso-WVD-Demo-RG" }
     }                
 }

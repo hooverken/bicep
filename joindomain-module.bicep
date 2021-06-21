@@ -1,14 +1,20 @@
-param domainNetBIOSName string
+// This is a Bicep module to run the JsonADDomainExtension, which attaches a Windows VM to ADDS.
+
+param virtualMachineName string
+param domainToJoin string
 param ouPath string
-param username string
-param password string {
-  secure: true
-} 
 
-var domainJoinOptions = 3  // required but not sure what it means :-)
+@secure()
+param domainJoinUsername string
 
-resource joinDomainExtension 'Microsoft.Compute/virtualMachines/extensions@2020-06-01' = {
-  name: '${domainNetBIOSName}-join'
+@secure()
+param domainJoinPassword string // passed in via key vault reference
+
+
+var domainJoinOptions = 3  // required
+
+resource joinDomain 'Microsoft.Compute/virtualMachines/extensions@2020-06-01' = {
+  name: '${virtualMachineName}/joindomain'
   location: resourceGroup().location
   properties: {
     publisher: 'Microsoft.compute'
@@ -16,14 +22,15 @@ resource joinDomainExtension 'Microsoft.Compute/virtualMachines/extensions@2020-
     typeHandlerVersion : '1.3'
     autoUpgradeMinorVersion : true
     settings: {
-      name: domainNetBIOSName
+      name: domainToJoin
+      User : domainJoinUsername
       OUPath: ouPath
-      User : '${domainNetBIOSName}\\${username}'
       restart: true 
       Options: domainJoinOptions
     }
     protectedSettings: {
-      password: password
+      password: domainJoinPassword
     }
   }
 }
+

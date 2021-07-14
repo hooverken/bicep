@@ -10,6 +10,7 @@ param virtualMachineSize string = 'Standard_D2as_v4'
 param virtualNetworkName string = 'Kentoso-VNET'
 param virtualNetworkResourceGroupName string = 'Kentoso-WVD-Demo-RG'
 
+
 @allowed([
   'DesktopHostSubnet'
   'RemoteAppHostSubnet'
@@ -21,7 +22,7 @@ param virtualNetworkResourceGroupName string = 'Kentoso-WVD-Demo-RG'
   'FileSyncSubnet'
   'ADFSProxySubnet'
 ])
-param subnetName string = 'NewMSIXSubnet'
+// param subnetName string = 'NewMSIXSubnet'
 
 param vmImagePublisher string = 'MicrosoftWindowsServer'
 param vmOfferName string = 'WindowsServer'
@@ -29,7 +30,7 @@ param vmOfferSku string = '2019-Datacenter'
 
 param adminUsername string = 'ken'
 @secure()
-param adminPassword string 
+param adminPassword string
 
 param domainToJoin string = 'kentoso.us'
 param domainJoinUsernameSecretName string = 'kentosoDomainJoinUsername'
@@ -41,9 +42,13 @@ param ouPath string = 'OU=NewComputers,DC=kentoso,DC=us' // joindomain can't add
 
 
 // Variables
-var subnetId = '${subscription().id}/resourceGroups/${virtualNetworkResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${virtualNetworkName}/subnets/${subnetName}'
+// var subnetId = '${subscription().id}/resourceGroups/${virtualNetworkResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${virtualNetworkName}/subnets/${subnetName}'
 
-
+// reference to VNET in another RG by adding the "scope" property
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
+  name: virtualNetworkName
+  scope: resourceGroup(virtualNetworkResourceGroupName)
+}
 
 // Building the VM and its components
 
@@ -60,7 +65,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-06-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id : subnetId
+            id : virtualNetwork.properties.subnets[6].id  // messy reference, there needs to be a better way...
           }
           privateIPAllocationMethod: 'Dynamic'
         }

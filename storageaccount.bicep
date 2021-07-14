@@ -1,4 +1,4 @@
-param locationParam string = 'eastus2'
+// You can include comments!
 param storageAccountNameParam string = 'kentososg1a'
 
 var storageAccountSkuVar = 'Standard_LRS'

@@ -22,7 +22,7 @@ param virtualNetworkResourceGroupName string = 'Kentoso-WVD-Demo-RG'
   'FileSyncSubnet'
   'ADFSProxySubnet'
 ])
-// param subnetName string = 'NewMSIXSubnet'
+param subnetName string = 'NewMSIXSubnet'
 
 param vmImagePublisher string = 'MicrosoftWindowsServer'
 param vmOfferName string = 'WindowsServer'
@@ -137,7 +137,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2020-06-01' = {
     }
     storageProfile: {
       imageReference: {
-        publisher: vmImagePublisher
+        publisher: 'MicrosoftWindowsServer'
         offer: vmOfferName
         sku: vmOfferSku
         version: 'latest'

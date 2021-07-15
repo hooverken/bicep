@@ -4,24 +4,11 @@
 // most have default values except for the default admin username and password
 
 param virtualMachineName string
-
-
 param virtualMachineSize string = 'Standard_D2as_v4'
+
 param virtualNetworkName string = 'Kentoso-VNET'
 param virtualNetworkResourceGroupName string = 'Kentoso-WVD-Demo-RG'
 
-
-@allowed([
-  'DesktopHostSubnet'
-  'RemoteAppHostSubnet'
-  'ADDS-Subnet'
-  'LinuxVMSubnet'
-  'NewMSIXSubnet'
-  'NetAppFilesSubnet'
-  'subnetWithNSG'
-  'FileSyncSubnet'
-  'ADFSProxySubnet'
-])
 param subnetName string = 'NewMSIXSubnet'
 
 param vmImagePublisher string = 'MicrosoftWindowsServer'
@@ -36,18 +23,20 @@ param domainToJoin string = 'kentoso.us'
 param domainJoinUsernameSecretName string = 'kentosoDomainJoinUsername'
 param domainJoinPasswordSecretName string = 'kentosoDomainJoinPassword'
 param keyVaultName string = 'Ken-EastUS2-KV1'
-param keyVaultSubscription string = 'df5f8257-01b5-4a86-b42d-c83a9355c855'
 param keyVaultResourceGroupName string = 'Kentoso-WVD-Demo-RG'
 param ouPath string = 'OU=NewComputers,DC=kentoso,DC=us' // joindomain can't add computers to the default "Computers" container (?!?)
 
 
-// Variables
-// var subnetId = '${subscription().id}/resourceGroups/${virtualNetworkResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${virtualNetworkName}/subnets/${subnetName}'
-
-// reference to VNET in another RG by adding the "scope" property
+// reference to VNET which is defined in another RG by adding the "scope" property
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
   name: virtualNetworkName
   scope: resourceGroup(virtualNetworkResourceGroupName)
+}
+
+// and a resource object that points to a subnet of the above vnet (parent/child relationship)
+resource targetSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  parent : virtualNetwork
+  name: subnetName
 }
 
 // Building the VM and its components
@@ -65,7 +54,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-06-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id : virtualNetwork.properties.subnets[6].id  // messy reference, there needs to be a better way...
+            id : targetSubnet.id
           }
           privateIPAllocationMethod: 'Dynamic'
         }
@@ -137,7 +126,7 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2020-06-01' = {
     }
     storageProfile: {
       imageReference: {
-        publisher: 'MicrosoftWindowsServer'
+        publisher: vmImagePublisher
         offer: vmOfferName
         sku: vmOfferSku
         version: 'latest'
@@ -164,10 +153,10 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2020-06-01' = {
 // key vault reference for secrets
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   name: keyVaultName
-  scope: resourceGroup(keyVaultSubscription,keyVaultResourceGroupName)
+  scope: resourceGroup(keyVaultResourceGroupName) 
 }
 
-// reference to external module to do domain join (so we can read the KV reference)
+// Callout to external module to do domain join (so we can read the KV reference)
 module joinDomain './joindomain-module.bicep' = {
   name: '${virtualMachineName}-domainjoin'
   dependsOn: [ 

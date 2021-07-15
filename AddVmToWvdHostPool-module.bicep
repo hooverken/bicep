@@ -1,3 +1,4 @@
+// This doesn't work... yet
 
 param artifactsLocation string
 param hostPoolName string

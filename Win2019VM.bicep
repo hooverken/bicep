@@ -12,11 +12,19 @@ param vmOfferSku string
 param adminUsername string
 param adminPassword string
 
-// Variables
-var subnetId = '${subscription().id}/resourceGroups/${virtualNetworkResourceGroupName}/providers/Microsoft.Network/virtualNetworks/${virtualNetworkName}/subnets/${subnetName}'
+
 
 // Building the VM and its components
 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
+  name: virtualNetworkName
+  scope: resourceGroup(virtualNetworkResourceGroupName)
+}
+
+resource targetSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  name: subnetName
+  parent: virtualNetwork
+}
 
 // NSG for the NIC
 resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01'= {
@@ -67,7 +75,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-06-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id : subnetId
+            id : targetSubnet.id
           }
           privateIPAllocationMethod: 'Dynamic'
         }

@@ -43,6 +43,16 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01'= {
   }
 }
 
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
+  name: virtualNetworkName
+  scope: resourceGroup(virtualNetworkResourceGroupName)
+}
+
+resource targetSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  parent: virtualNetwork
+  name: subnetName
+}
+
 // define the NIC for the VM
 resource networkInterface 'Microsoft.Network/networkInterfaces@2020-06-01' = {
   name: '${virtualMachineName}-NIC'
@@ -56,7 +66,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2020-06-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id : subnetId
+            id : targetSubnet.id
           }
           privateIPAllocationMethod: 'Dynamic'
         }
@@ -115,7 +125,6 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2020-06-01' = {
     }
   }
 }
-
 
 output virtualMachineName string = virtualMachineName
 output virtualMachineSize string = virtualMachineSize
